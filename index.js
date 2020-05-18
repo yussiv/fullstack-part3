@@ -1,12 +1,7 @@
 const express = require('express')
 
 const app = express()
-const phonebook = [
-  {
-    name: 'Arto Hellas',
-    number: '040-123456',
-    id: 1
-  },
+let phonebook = [
   {
     name: 'Arto Hellas',
     number: '040-123456',
@@ -15,7 +10,7 @@ const phonebook = [
   {
     name: 'Ada Lovelace',
     number: '39-44-523523',
-    id: 4
+    id: 2
   },
   {
     name: 'Dan Abramov',
@@ -26,7 +21,7 @@ const phonebook = [
     name: 'Mary Poppendieck',
     number: '39-23-6423122',
     id: 4
-  },
+  }
 ]
 
 app.get('/api/persons/:id', (req, res) => {
@@ -36,6 +31,12 @@ app.get('/api/persons/:id', (req, res) => {
     res.status(404).end()
   else
     res.json(person)
+})
+
+app.delete('/api/persons/:id', (req, res) => {
+  const id = Number(req.params.id)
+  phonebook = phonebook.filter(entry => entry.id !== id)
+  res.status(204).end()
 })
 
 app.get('/api/persons', (req, res) => {
