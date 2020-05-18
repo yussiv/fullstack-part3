@@ -24,6 +24,8 @@ let phonebook = [
   }
 ]
 
+app.use(express.json())
+
 app.get('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
   const person = phonebook.find(entry => entry.id === id)
@@ -41,6 +43,17 @@ app.delete('/api/persons/:id', (req, res) => {
 
 app.get('/api/persons', (req, res) => {
   res.json(phonebook)
+})
+
+app.post('/api/persons', (req, res) => {
+  const id = Math.floor(Math.random() * 99999)
+  const entry = {
+    name: req.body.name,
+    number: req.body.number,
+    id
+  }
+  phonebook = phonebook.concat(entry)
+  res.json(entry)
 })
 
 app.get('/info', (req, res) => {
