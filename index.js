@@ -29,6 +29,15 @@ const phonebook = [
   },
 ]
 
+app.get('/api/persons/:id', (req, res) => {
+  const id = Number(req.params.id)
+  const person = phonebook.find(entry => entry.id === id)
+  if (!person)
+    res.status(404).end()
+  else
+    res.json(person)
+})
+
 app.get('/api/persons', (req, res) => {
   res.json(phonebook)
 })
