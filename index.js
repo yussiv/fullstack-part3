@@ -33,6 +33,7 @@ morgan.token('body', (req, res) => {
 })
 
 app.use(express.json())
+app.use(express.static('ui/build'))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 app.get('/api/persons/:id', (req, res) => {
@@ -81,6 +82,7 @@ app.get('/info', (req, res) => {
     <p>${new Date()}</p>`)
 })
 
-app.listen(3001, () => {
-  console.log('Server listening port 3001')
+const PORT = process.env.PORT || 3210
+app.listen(PORT, () => {
+  console.log(`Server listening at port ${PORT}`)
 })
