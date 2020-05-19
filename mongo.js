@@ -7,8 +7,8 @@ if (process.argv.length < 3) {
 
 const [password, name, number] = process.argv.slice(2, 5)
 
-const url =
-  `mongodb+srv://fullstackuser:${encodeURIComponent(password)}@${process.env.MONGODB_URL}/test?retryWrites=true&w=majority`
+const url = process.env.MONGODB_URI
+
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 
 const personSchema = new mongoose.Schema({

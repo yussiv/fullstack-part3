@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
+const Person = require('./models/person')
 
 const app = express()
 let phonebook = [
@@ -52,7 +54,10 @@ app.delete('/api/persons/:id', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(phonebook)
+  Person.find({})
+    .then(response => {
+      res.json(response)
+    })
 })
 
 app.post('/api/persons', (req, res) => {
@@ -82,7 +87,7 @@ app.get('/info', (req, res) => {
     <p>${new Date()}</p>`)
 })
 
-const PORT = process.env.PORT || 3210
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server listening at port ${PORT}`)
 })
