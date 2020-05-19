@@ -69,16 +69,16 @@ app.post('/api/persons', (req, res) => {
       error: "name and number are required fields"
     })
 
-  const existing = phonebook.find(entry => entry.name === name)
-  if (existing)
-    return res.status(400).json({
-      error: "name must be unique"
-    })
-  
-  const id = Math.floor(Math.random() * 99999)
-  const entry = {name, number, id }
-  phonebook = phonebook.concat(entry)
-  res.json(entry)
+  // const existing = phonebook.find(entry => entry.name === name)
+  // if (existing)
+  //   return res.status(400).json({
+  //     error: "name must be unique"
+  //   })
+  const person = new Person({name, number})
+  person.save().then(response => {
+    console.log(response.toJSON())
+    res.json(response)
+  })
 })
 
 app.get('/info', (req, res) => {
