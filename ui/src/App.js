@@ -93,6 +93,9 @@ const App = () => {
             setPersons(persons.map(p => p.id === updatedPerson.id ? updatedPerson : p)) 
             addNotification(`Number updated for ${newName}`, 'success')
           })
+          .catch(error => {
+            addNotification(error.response.data.error, 'failure')
+          })
       }
     } else {
       personService
@@ -100,6 +103,9 @@ const App = () => {
         .then(newPerson => { 
           setPersons(persons.concat(newPerson))
           addNotification(`Added ${newName}`, 'success')
+        })
+        .catch(error => {
+          addNotification(error.response.data.error, 'failure')
         })
       
     }
