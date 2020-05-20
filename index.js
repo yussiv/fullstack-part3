@@ -4,30 +4,9 @@ const morgan = require('morgan')
 const Person = require('./models/person')
 
 class InputError extends Error {}
+class NotFoundError extends Error {}
 
 const app = express()
-let phonebook = [
-  {
-    name: 'Arto Hellas',
-    number: '040-123456',
-    id: 1
-  },
-  {
-    name: 'Ada Lovelace',
-    number: '39-44-523523',
-    id: 2
-  },
-  {
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-    id: 3
-  },
-  {
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-    id: 4
-  }
-]
 
 morgan.token('body', (req, res) => {
   if (req.method === 'POST')
@@ -40,13 +19,15 @@ app.use(express.json())
 app.use(express.static('ui/build'))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = phonebook.find(entry => entry.id === id)
-  if (!person)
-    res.status(404).end()
-  else
-    res.json(person)
+app.get('/api/persons/:id', (req, res, next) => {
+  Person.findById(req.params.id)
+    .then(person => { 
+      if (person) 
+        res.json(person) 
+      else
+        next(new NotFoundError(req.params.id))
+    })
+    .catch(next)
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -54,14 +35,20 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .then(() => {
       res.status(204).end()
     })
-    .catch(error => { next(error) })
+    .catch(next)
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
   const {name, number} = req.body
-  Person.findByIdAndUpdate(req.params.id, { name, number }, { new: true })
-    .then(entry => { res.json(entry) })
-    .catch(error => { next(error) })
+  const id = req.params.id
+  Person.findByIdAndUpdate(id, { name, number }, { new: true })
+    .then(entry => { 
+      if (entry)
+        res.json(entry) 
+      else
+        next(new NotFoundError(id))
+      })
+    .catch(next)
 })
 
 app.get('/api/persons', (req, res, next) => {
@@ -69,7 +56,7 @@ app.get('/api/persons', (req, res, next) => {
     .then(response => {
       res.json(response)
     })
-    .catch(error => { next(error) })
+    .catch(next)
 })
 
 app.post('/api/persons', (req, res, next) => {
@@ -78,24 +65,30 @@ app.post('/api/persons', (req, res, next) => {
 
   if (!name || !number)
     return next(new InputError("name and number are required fields"))
-
-  // const existing = phonebook.find(entry => entry.name === name)
-  // if (existing)
-  //   return res.status(400).json({
-  //     error: "name must be unique"
-  //   })
-  const person = new Person({name, number})
-  person.save()
-    .then(response => {
-      res.json(response)
+    
+  Person.findOne({name})
+    .then(found => {
+      if(found)
+        return next(new InputError("name must be unique"))
+      
+      const person = new Person({name, number})
+      person.save()
+        .then(response => {
+          res.json(response)
+        })
+        .catch(next)
     })
-    .catch(error => { next(error) })
+    .catch(next)
 })
 
-app.get('/info', (req, res) => {
-  res.send(`
-    <p>Phonebook contains ${phonebook.length} entries</p>
-    <p>${new Date()}</p>`)
+app.get('/info', (req, res, next) => {
+  Person.count({})
+    .then(count => {
+      res.send(`
+        <p>Phonebook contains ${count} entries</p>
+        <p>${new Date()}</p>`)
+    })
+    .catch(next)
 })
 
 const errorHandler = (error, req, res, next) => {
@@ -103,6 +96,9 @@ const errorHandler = (error, req, res, next) => {
 
   if (error instanceof InputError)
     return res.status(400).json({ error: error.message })
+
+  if (error instanceof NotFoundError)
+    return res.status(404).end()
   
   if (error.name === 'CastError')
     return res.status(400).json({ error: 'Invalid ID' })
