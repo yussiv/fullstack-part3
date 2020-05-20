@@ -3,6 +3,8 @@ const express = require('express')
 const morgan = require('morgan')
 const Person = require('./models/person')
 
+class InputError extends Error {}
+
 const app = express()
 let phonebook = [
   {
@@ -47,27 +49,28 @@ app.get('/api/persons/:id', (req, res) => {
     res.json(person)
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  phonebook = phonebook.filter(entry => entry.id !== id)
-  res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then(() => {
+      res.status(204).end()
+    })
+    .catch(error => { next(error) })
 })
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find({})
     .then(response => {
       res.json(response)
     })
+    .catch(error => { next(error) })
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const name = req.body.name
   const number = req.body.number
 
   if (!name || !number)
-    return res.status(400).json({
-      error: "name and number are required fields"
-    })
+    return next(new InputError("name and number are required fields"))
 
   // const existing = phonebook.find(entry => entry.name === name)
   // if (existing)
@@ -75,10 +78,11 @@ app.post('/api/persons', (req, res) => {
   //     error: "name must be unique"
   //   })
   const person = new Person({name, number})
-  person.save().then(response => {
-    console.log(response.toJSON())
-    res.json(response)
-  })
+  person.save()
+    .then(response => {
+      res.json(response)
+    })
+    .catch(error => { next(error) })
 })
 
 app.get('/info', (req, res) => {
@@ -86,6 +90,16 @@ app.get('/info', (req, res) => {
     <p>Phonebook contains ${phonebook.length} entries</p>
     <p>${new Date()}</p>`)
 })
+
+const errorHandler = (error, req, res, next) => {
+  console.log(error)
+  if (error instanceof InputError)
+    return res.status(404).json({ error: error.message })
+
+  res.status(500).json({ error: 'This is fine' })
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
