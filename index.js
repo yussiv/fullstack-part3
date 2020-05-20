@@ -65,20 +65,13 @@ app.post('/api/persons', (req, res, next) => {
 
   if (!name || !number)
     return next(new InputError("name and number are required fields"))
-    
-  Person.findOne({name})
-    .then(found => {
-      if(found)
-        return next(new InputError("name must be unique"))
-      
-      const person = new Person({name, number})
-      person.save()
-        .then(response => {
-          res.json(response)
-        })
-        .catch(next)
-    })
-    .catch(next)
+  
+    const person = new Person({name, number})
+    person.save()
+      .then(response => {
+        res.json(response)
+      })
+      .catch(next)
 })
 
 app.get('/info', (req, res, next) => {
@@ -102,6 +95,9 @@ const errorHandler = (error, req, res, next) => {
   
   if (error.name === 'CastError')
     return res.status(400).json({ error: 'Invalid ID' })
+  
+  if (error.name === 'ValidationError')
+    return res.status(400).json({ error: error.message })
 
   res.status(500).json({ error: 'This is fine' })
 }
