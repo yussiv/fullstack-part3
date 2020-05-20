@@ -57,6 +57,13 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(error => { next(error) })
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+  const {name, number} = req.body
+  Person.findByIdAndUpdate(req.params.id, { name, number }, { new: true })
+    .then(entry => { res.json(entry) })
+    .catch(error => { next(error) })
+})
+
 app.get('/api/persons', (req, res, next) => {
   Person.find({})
     .then(response => {
@@ -93,8 +100,12 @@ app.get('/info', (req, res) => {
 
 const errorHandler = (error, req, res, next) => {
   console.log(error)
+
   if (error instanceof InputError)
-    return res.status(404).json({ error: error.message })
+    return res.status(400).json({ error: error.message })
+  
+  if (error.name === 'CastError')
+    return res.status(400).json({ error: 'Invalid ID' })
 
   res.status(500).json({ error: 'This is fine' })
 }
