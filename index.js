@@ -8,7 +8,7 @@ class NotFoundError extends Error {}
 
 const app = express()
 
-morgan.token('body', (req, res) => {
+morgan.token('body', req => {
   if (req.method === 'POST')
     return JSON.stringify(req.body)
   else
@@ -21,9 +21,9 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 app.get('/api/persons/:id', (req, res, next) => {
   Person.findById(req.params.id)
-    .then(person => { 
-      if (person) 
-        res.json(person) 
+    .then(person => {
+      if (person)
+        res.json(person)
       else
         next(new NotFoundError(req.params.id))
     })
@@ -39,15 +39,15 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-  const {name, number} = req.body
+  const { name, number } = req.body
   const id = req.params.id
   Person.findByIdAndUpdate(id, { name, number }, { new: true, runValidators: true })
-    .then(entry => { 
+    .then(entry => {
       if (entry)
-        res.json(entry) 
+        res.json(entry)
       else
         next(new NotFoundError(id))
-      })
+    })
     .catch(next)
 })
 
@@ -64,14 +64,14 @@ app.post('/api/persons', (req, res, next) => {
   const number = req.body.number
 
   if (!name || !number)
-    return next(new InputError("name and number are required fields"))
-  
-    const person = new Person({name, number})
-    person.save()
-      .then(response => {
-        res.json(response)
-      })
-      .catch(next)
+    return next(new InputError('name and number are required fields'))
+
+  const person = new Person({ name, number })
+  person.save()
+    .then(response => {
+      res.json(response)
+    })
+    .catch(next)
 })
 
 app.get('/info', (req, res, next) => {
@@ -84,7 +84,7 @@ app.get('/info', (req, res, next) => {
     .catch(next)
 })
 
-const errorHandler = (error, req, res, next) => {
+const errorHandler = (error, req, res) => {
   console.log(error)
 
   if (error instanceof InputError)
@@ -92,10 +92,10 @@ const errorHandler = (error, req, res, next) => {
 
   if (error instanceof NotFoundError)
     return res.status(404).end()
-  
+
   if (error.name === 'CastError')
     return res.status(400).json({ error: 'Invalid ID' })
-  
+
   if (error.name === 'ValidationError')
     return res.status(400).json({ error: error.message })
 

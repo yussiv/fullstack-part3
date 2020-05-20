@@ -1,3 +1,4 @@
+require('dotenv').config()
 const mongoose = require('mongoose')
 
 if (process.argv.length < 3) {
@@ -5,7 +6,7 @@ if (process.argv.length < 3) {
   process.exit(1)
 }
 
-const [password, name, number] = process.argv.slice(2, 5)
+const [name, number] = process.argv.slice(3, 5)
 
 const url = process.env.MONGODB_URI
 
